@@ -1,0 +1,5 @@
+# depslib dependency file v1.0
+1400029186 source:/home/creuzodete/Documentos/Oficina_de_Computaçao_I/matriz_objs/matriz_objs.c
+	<stdio.h>
+	<stdlib.h>
+

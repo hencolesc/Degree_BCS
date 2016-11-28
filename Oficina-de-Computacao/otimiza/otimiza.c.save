@@ -1,0 +1,238 @@
+#include <stdio.h>
+#include <stdlib.h>
+#define QUANT_ARG 3
+
+typedef struct ponto
+{
+unsigned p_potencia, p_altura;
+float p_rendimento;
+}
+tipo_grafico; // Tipo global de variavel p/ pontos da curva de rendimento da turbina
+
+unsigned le_dados(tipo_grafico **grafico, unsigned *qt_potencias, unsigned *qt_alturas)
+{// Le dados oriundos de um arquivo pelo buffer de entrada stdin
+unsigned i, j, qt_turbinas, *vet_potencias, *vet_alturas;
+FILE *arq;
+
+if (!(arq = fopen("/home/creuzodete/Documentos/Oficina_de_Computaçao/otimiza/DadosUsina1.txt", "r+")))
+	{
+	perror("Erro no arquivo.\n");
+	exit(1);
+	}
+
+fscanf(arq, "%u", &qt_turbinas); // 1ª linha
+fscanf(arq, "%u", qt_potencias); // 2ª linha
+vet_potencias = malloc(*qt_potencias*sizeof(unsigned));
+for(i = 0; i < *qt_potencias; ++i)
+	fscanf(arq, "%u", &vet_potencias[i]); // Le as qt_potencias da 3ª linha de arq
+
+fscanf(arq, "%u", qt_alturas); // Quant. de alturas, 4ª linha
+vet_alturas = malloc(*qt_alturas*sizeof(unsigned));
+
+for(i = 0; i < *qt_alturas; ++i)
+	fscanf(arq, "%u", &vet_alturas[i]); // Le as qt_alturas da 5ª linha de arq
+
+*grafico = malloc(*qt_potencias**qt_alturas*sizeof(tipo_grafico));
+// Grafico em matriz vetorizada por linha, grafico[linha][coluna] = grafico[coluna + *qt_alturas*linha]
+
+for(i = 0; i < *qt_potencias; ++i) // Cada ponto (j, i) do grafico se relaciona com o rendimento, potencia e altura
+	for(j = 0; j < *qt_alturas; ++j)
+		{
+        fscanf(arq, "%f", &grafico[0][j + *qt_alturas *i].p_rendimento);
+        grafico[0][j + *qt_alturas * i].p_potencia = vet_potencias[i];
+        grafico[0][j + *qt_alturas * i].p_altura = vet_alturas[j];
+        }
+
+free(vet_potencias);
+free(vet_alturas); // Estes vetores nao sao mais necessarios
+
+return qt_turbinas;
+}
+
+unsigned salva_resultado(tipo_grafico *grafico, unsigned combinacao[], unsigned coluna_altura, unsigned qt_alturas,
+						 float efic_pond, unsigned qt_potencias, unsigned qt_turbinas, float resultado[])
+{// Salva o resultado de uma combinação e efic. pond. de acordo com a curva grafico e retorna o tamanho de resultado
+unsigned i, j; // i percorre o vetor resultado, a partir da posição 1, de 3 em 3;
+			   // j percorre o vetor combinacao
+
+resultado[0] = efic_pond; // Salva efic. pond.
+
+for(i = 1, j = 0; j < qt_potencias && i < 3 * qt_turbinas + 1; i += 3, ++j)
+	{
+	while (!combinacao[j] && j < qt_potencias) // Potencias n usadas sáo ignoradas. Percorremos os zeros até achar um nº nao-zero
+		++j;
+
+	if (j == qt_potencias)
+		break; // j percorreu toda a combinação
+
+	resultado[i] = combinacao[j]; // nº de turbinas ligadas
+	resultado[i + 1] = grafico[coluna_altura + j * qt_alturas].p_potencia; // potencia em MW
+	resultado[i + 2] = grafico[coluna_altura + j * qt_alturas].p_rendimento; // rendimento
+	}
+
+return i;
+}
+
+short passou_pot(tipo_grafico *grafico, unsigned combinacao[], unsigned tam, unsigned coluna_altura,
+				 unsigned qt_alturas, unsigned pot_total)
+{// Retorna 1 se soma > pot_total, 0 caso contrario
+short i;
+unsigned soma = 0;
+
+for(i = tam - 1; soma <= pot_total && i >= 0; --i)
+    soma += combinacao[i] * grafico[coluna_altura + i * qt_alturas].p_potencia;
+
+if (soma > pot_total)
+	return 1;
+
+return 0;
+}
+
+float eh_melhor_efic_pond(tipo_grafico *grafico, unsigned v[], unsigned tam, unsigned coluna_altura,
+						  unsigned qt_alturas, unsigned pot_total, float melhor_efic_pond)
+{// Retorna a eficiencia ponderada da combinacao de acordo com a curva grafico se maior que melhor_efic_pond, 0 caso contrario
+unsigned i;
+float numerador = 0;
+
+for(i = 0; i < tam; ++i)
+    numerador += v[i] *
+    grafico[coluna_altura + i * qt_alturas].p_potencia *
+    grafico[coluna_altura + i * qt_alturas].p_rendimento; // Parcelas de soma da efic. pond.
+
+numerador = numerador/pot_total; // Uma pequena perda de significancia numerica
+
+if (numerador > melhor_efic_pond)
+	return numerador;
+
+return 0;
+}
+
+unsigned short neh_overflow(unsigned combinacao[], unsigned qt_potencias)
+{// Retorna 1 se chegar na ultima combinação valida. Desculpe por se chamar assim hu3hu3hu3
+short i;
+
+for (i = qt_potencias - 1; i >= 0; --i)
+	if (combinacao[i])
+		return 1;
+return 0;
+}
+
+void prox_combinacao(unsigned combinacao[], unsigned qt_potencias, unsigned qt_turbinas)
+{// Gera proxima combinação ajeitando de acordo com a base do nº por meio de "empréstimos" de algarismos a esquerda
+// AQUI ESTA O MACETE!!!
+short i;
+unsigned short base = qt_turbinas + 1, soma = 0;
+
+for (i = 0; combinacao[i] == 0 ; ++i) // 1º algarimos a esquerda != 0
+	combinacao[i] = base - 1; // Tais algarismos se tornam o maior da base
+
+combinacao[i] -= 1; // Empresta 1 do algarismo a esquerda, isto gera a prox. combinação em ordem decrescente
+
+for(i = qt_potencias - 1; soma < qt_turbinas && i >= 0; --i)
+    soma += combinacao[i]; // Em qual algarismo a soma passou ou ficou igual a qt_turbinas?
+
+if ((short)(soma - qt_turbinas) >= 0)
+	{ // O loop abaixo pega um atalho pulando intervalos de combinações que tem soma de turbinas > qt_turbinas
+	combinacao[i + 1] -= soma - qt_turbinas; // Retira o tanto que passou de qt_turbinas
+
+	for (; i >= 0; --i) // Zera o resto a direita do nº.
+		combinacao[i] = 0;
+
+	// Muitas combinações inuteis sao descartadas neste for acima. Observe o padrao destes intervalos
+	}
+}
+
+float prox_candidato_efic_pond(tipo_grafico *grafico, unsigned combinacao[], unsigned coluna_altura, unsigned qt_alturas,
+							   unsigned pot_total, float melhor_efic_pond, unsigned qt_potencias, unsigned qt_turbinas)
+{// Fusão de funções, em loop, essenciais p/ otimiza_imprime: soma_turbina_vetor, soma_potencia_combinacao e efic_pond_combinacao
+float efic_pond;
+
+do
+	prox_combinacao(combinacao, qt_potencias, qt_turbinas); // Gera prox. combinação (c/ atalhos!) de turbinas ligadas
+while (passou_pot(grafico, combinacao, qt_potencias, coluna_altura, qt_alturas, pot_total) ||
+	  (!(efic_pond = eh_melhor_efic_pond(grafico, combinacao, qt_potencias, coluna_altura,
+										qt_alturas, pot_total, melhor_efic_pond)) &&
+										neh_overflow(combinacao, qt_potencias)));
+
+if (!neh_overflow(combinacao, qt_potencias))
+	return 0; // Caso "overflow". Veja a função
+else
+	return efic_pond; // Substituirá o melhor_efic_pond se retornou algo maior que 0
+}
+
+unsigned coluna_altura_grafico(tipo_grafico *grafico, unsigned altura_usina)
+{// Retorna a coluna do grafico que relaciona os rendimentos c/ a altura da usina
+unsigned i;
+
+for(i = 0; ; ++i)
+	{
+	if (grafico[i].p_altura == altura_usina)
+		return i;
+	}
+}
+
+void imprime_resultado(float resultado[], unsigned tam)
+{// Mostra resultado na tela conforme pedido
+unsigned i;
+
+printf("eficiencia ponderada = %f\n", resultado[0]);
+for(i = 1; i < tam; i += 3)
+	{
+	printf("%u ", (unsigned)resultado[i]);
+	if (resultado[i]-1)
+		printf("turbinas em ");
+	else
+		printf("turbina em ");
+	printf("%u MW e eficiencia %f\n", (unsigned)resultado[i + 1], resultado[i + 2]);
+	}
+}
+
+void otimiza_imprime(tipo_grafico *grafico, unsigned qt_potencias, unsigned qt_turbinas,
+					 unsigned coluna_altura, unsigned pot_total, unsigned qt_alturas)
+{// Testa combinações de turbinas e potencias na altura dada. Seleciona a melhor baseado na eficiencia ponderada
+unsigned tam, combinacao[qt_potencias];
+float efic_pond, resultado[3 * qt_turbinas + 1];
+// tam max p/ resultado: (1 turbina + pot + rend) * qt_turbinas + eficiencia pond.
+// cada posição de combinacao é tratado como um algarismo de um nº na base qt_turbinas + 1
+// ex.: 4 turbinas e 10 potencias => nº de base 5 com qt_potencias => 0003001000
+// mapeando as potencias c/ os algarimos de combinacao, podemos testar todas as configs. de turbinas possiveis
+for (tam = 0; tam < qt_potencias; ++tam)
+	combinacao[tam] = qt_turbinas; // combinacao[] = {base - 1, base - 1, . . ., base - 1}
+
+resultado[0] = 0; // Inicialmente, o resultado guarda nenhum dado alem da efic. pond. inicial = zero
+while (neh_overflow(combinacao, qt_potencias)) // neh_overflow = 0 qnd terminar tds as combinações
+	{
+	// feedback_progresso(combinacao, qt_potencias, qt_turbinas + 1); // Feedback do progresso a cada combinação
+    if ((efic_pond = prox_candidato_efic_pond(grafico, combinacao, coluna_altura, qt_alturas, pot_total,
+											  resultado[0], qt_potencias, qt_turbinas)))
+		tam = salva_resultado(grafico, combinacao, coluna_altura, qt_alturas, efic_pond,
+							  qt_potencias, qt_turbinas, resultado);
+	}
+imprime_resultado(resultado, tam); // Mostra a melhor otimização na tela
+}
+
+int main(int argc, char *argv[])
+{
+tipo_grafico *grafico; // Curva de rendimento da turbina
+unsigned pot_total, altura_usina, qt_turbinas, qt_potencias, qt_alturas;
+
+if (argc != QUANT_ARG)
+	{
+	perror("Quantidade incorreta de argumentos.\n");
+	exit(1);
+	}
+
+altura_usina = atoi(argv[1]); // 1º argumento
+pot_total = atoi(argv[2]); // 2º argumento
+
+if (!(qt_turbinas = le_dados(&grafico, &qt_potencias, &qt_alturas))) // Le arquivo pela entrada padrao
+	{
+	perror("Quantidade incorreta de turbinas.\n");
+	exit(1);
+	}
+
+otimiza_imprime(grafico, qt_potencias, qt_turbinas, coluna_altura_grafico(grafico, altura_usina), pot_total, qt_alturas);
+// "coração" da execução
+
+return 0;
+}

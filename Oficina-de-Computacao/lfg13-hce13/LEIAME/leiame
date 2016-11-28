@@ -1,0 +1,13 @@
+Autores: Lucas Ferreira Glir e Henrique Colodetti Escanferla
+
+src: pasta com o codigo fonte.
+
+doc: pasta com documentação html gerada pelo doxygen
+
+LEIAME: pasta com o leiame do programa.
+
+leiame: arquivo de descrição do codigo.
+
+vina.c: codigo do programa.
+
+Sobre as tecnicas utilizadas no codigo: usamos conversão de arquivo para vetor para melhor manipulação do mesmo. Alem disso, usamos leitura em blocos e bytes para delimitar começo e fim de membros nos arquivos. Isto elimina riscos de que possiveis caracteres possam indicar o fim ou o inicio fora do local devido. Houve muitos erros nas primeiras compilações. Isto foi contornado, resolvendo cada um, com calma, observando especificações apresentadas no site www.cplusplus.com.

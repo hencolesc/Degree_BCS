@@ -1,0 +1,169 @@
+// 1º Trabalho da disciplina Oficina de Computação, CI067, Professor Alexandre Direne. Autor: Henrique Colodetti Escanferla.
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#define false (0>0)
+#define true (!false)
+// Char a~z para ASCII decimal => 97~122
+
+static void substitui(char s[], short  int i, short int letra)
+{ // Insere char, com o codigo ASCII, no indice i da string s
+if (i+1>strlen(s))
+    {
+    perror("Tentou substittuir fora do tamanho util da string.");
+    exit(1);
+    }
+s[i]=(char)letra;
+}
+
+static void insere(char s[], short int i, short int letra)
+{ // Insere char, com o codigo ASCII, no indice i da string s, "empurrando" o resto para os lados
+if (i>strlen(s))
+    {
+    perror("Tentou inserir fora do tamanho util da string.");
+    exit(2);
+    }
+
+short int x;
+
+for (x=strlen(s); x>=i; x--)
+    s[x+1]=s[x];
+s[i]=(char)letra;
+}
+
+static void deleta(char s[], short int i)
+{ // Deleta char no indice i da string s, eliminando o "buraco"
+if (i+1>strlen(s))
+    {
+    perror("Tentou retirar fora do tamanho util da string.");
+    exit(3);
+    }
+for (; s[i+1]!='\0'; i++)
+    s[i]=s[i+1];
+s[i]='\0';
+}
+
+short int esta_no_plano(char plano[][27], char s[], short int tam)
+{
+short int achou=false, i;
+
+for(i=0; i<tam; i++)
+    if (!strcmp(s, plano[i])) { achou=true; break; } // Achou ocorrencia no plano; interrompe o loop
+return achou;
+}
+
+void faz_plano(char plano[][27], char s1[], char s2[], short int edicoes[], short int dist, short int* d_min,
+               short int letra_ant)
+{ //Gera todas as possibilidades de edições e coleta o 1º plano minimo possivel, dentre outros minimos, por retroação
+short int i, letra; // i=> indice da string s1; letra=> nº decimal que representa uma letra, de "a" até "z", em ASCII
+
+/*for(i=0; i<strlen(s1); i++)
+    for(letra=97; letra<123; letra++) // a~z => 97~122 em ASCII
+        {
+        printf("Entrou no loop de substitui.\n");
+        if (dist==*d_min)
+            return; // Plano atual é maior que o plano minimo atual
+        substitui(s1, i, letra);
+        if (esta_no_plano(plano, s1, dist))
+            return; // Plano atual tem palavra repetida
+        strcpy(plano[dist], s1);
+        edicoes[dist]=0; // Codigo p/ imprime_plano
+        dist++;
+        if (strcmp(s1, s2)) // É solução ou ainda não?
+            faz_plano(plano, s1, s2, edicoes, dist, d_min); // Recursão
+        else
+            if (dist<*d_min)
+                *d_min=dist; // Guarda o minimo
+            return;
+        }*/
+for(i=0; i<strlen(s1); i++) // Só um loop p/ as posições
+    {
+    printf("i = %d\n", i);
+    if (dist==*d_min)
+        {
+        insere(s1, i-1, letra_ant); // Retorna o s1 anterior
+        return; // Plano atual é maior que o plano minimo atual
+        }
+    letra_ant=s1[i];
+    deleta(s1, i);
+    if (esta_no_plano(plano, s1, dist))
+        {
+        printf("LINHA 91\n");
+        insere(s1, i, letra_ant); // Retorna o s1 anterior
+        return; // Plano atual tem palavra repetida
+        }
+    printf("s1 = %s\n", s1);
+    strcpy(plano[dist], s1);
+    edicoes[dist]=1; // Codigo p/ imprime_plano
+    dist++;
+    printf("dist = %d\n", dist);
+    if (strcmp(s1, s2)) // É solução ou ainda não?
+        {
+        faz_plano(plano, s1, s2, edicoes, dist, d_min, letra_ant); // Recursão
+        }
+    else
+        {
+        if (dist<*d_min)
+            *d_min=dist; // Guarda o minimo
+        insere(s1, i, letra_ant); // Retorna o s1 anterior
+        printf("LINHA 106\n");
+        printf("s1 antes de retornar = %s\n", s1);
+        return;
+        }
+    printf("dist no fim do for = %d\n", dist);
+    }
+/*for(i=0; i<strlen(s1)+1; i++) // Existe uma posição a mais da quant. de letras na string p/ inserir
+    for(letra=97; letra<123; letra++) // a~z => 97~122 em ASCII
+        {
+        if (dist==*d_min)
+            return; // Plano atual é maior que o plano minimo atual
+        insere(s1, i, letra);
+        if (esta_no_plano(plano, s1, dist))
+            return; // Plano atual tem palavra repetida
+        strcpy(plano[dist], s1);
+        edicoes[dist]=2; // Codigo p/ imprime_plano
+        dist++;
+        if (strcmp(s1, s2)) // É solução ou ainda não?
+            faz_plano(plano, s1, s2, edicoes, dist, d_min); // Recursão
+        else
+            if (dist<*d_min)
+                *d_min=dist; // Guarda o minimo
+            return;
+        }*/
+}
+
+void imprime_solucao(char plano[][27], short int edicoes[], short int dist)
+{ // Imprime conforme é pedido, a edição feita e a palavra intermediaria resultante em uma linha
+short int i;
+
+for(i=0; dist>i; i++)
+    {
+    switch (edicoes[i])
+        {
+        case 0: printf("Substitui: %s\n", plano[i]); break;
+        case 1: printf("Remove: %s\n", plano[i]); break;
+        case 2: printf("Insere: %s\n", plano[i]); break;
+        default: printf("Erro em imprime_plano. plano[%d] = %s\n", i, plano[i]); break;
+        }
+    }
+}
+
+int main()
+{
+char s1[27], s2[27], plano[26][27];
+short int edicoes[26], dist=0, d_min, letra_ant=0;
+
+printf("Entre com a palavra inicial: ");
+scanf("%s", s1);
+printf("Entre com a palavra final: ");
+scanf("%s", s2);
+if (strlen(s1)>strlen(s2)) // É garantido que existe um plano de edição de tamanho min(strlen(s1), strlen(s2))
+    d_min=strlen(s1);
+else
+    d_min=strlen(s2);
+faz_plano(plano, s1, s2, edicoes, dist, &d_min, letra_ant);
+imprime_solucao(plano, edicoes, d_min);
+printf("Distancia = %d\n", d_min);
+return 0;
+}

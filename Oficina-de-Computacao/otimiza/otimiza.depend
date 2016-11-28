@@ -1,0 +1,16 @@
+# depslib dependency file v1.0
+1400569491 source:/home/creuzodete/Documentos/Oficina_de_Computaçao_I/otimiza/otimiza.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+	<math.h>
+
+1399961233 source:/home/creuzodete/Dropbox/Documentos/Oficina_de_Computaçao_I/otimiza/otimiza.c
+	<stdio.h>
+	<stdlib.h>
+	<string.h>
+
+1400671818 source:/home/creuzodete/Documentos/Oficina_de_Computaçao/otimiza/otimiza.c
+	<stdio.h>
+	<stdlib.h>
+
