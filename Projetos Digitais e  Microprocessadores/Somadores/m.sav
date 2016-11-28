@@ -1,0 +1,45 @@
+[*]
+[*] GTKWave Analyzer v3.3.37 (w)1999-2012 BSI
+[*] Sun Nov  4 22:19:36 2012
+[*]
+[dumpfile] "/home/roberto/digital/adm/labs/somadores/v_multiplicador.vcd"
+[dumpfile_mtime] "Sun Nov  4 22:19:16 2012"
+[dumpfile_size] 457864
+[savefile] "/home/roberto/digital/adm/labs/somadores/m.sav"
+[timestart] 5111000
+[size] 890 600
+[pos] -1 -1
+*-19.000000 5832000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 210
+[signals_width] 134
+[sst_expanded] 1
+[sst_vpaned_height] 154
+@22
+u_mult.a[15:0]
+u_mult.b[15:0]
+@200
+-
+@22
+u_mult.p01[16:0]
+u_mult.p02[16:0]
+u_mult.p03[16:0]
+u_mult.p04[16:0]
+u_mult.p05[16:0]
+u_mult.p06[16:0]
+u_mult.p07[16:0]
+u_mult.p08[16:0]
+u_mult.p09[16:0]
+u_mult.p10[16:0]
+u_mult.p11[16:0]
+u_mult.p12[16:0]
+u_mult.p13[16:0]
+u_mult.p14[16:0]
+u_mult.p15[16:0]
+u_mult.p16[16:0]
+u_mult.prod[31:0]
+@200
+-
+@23
+esp_res[31:0]
+[pattern_trace] 1
+[pattern_trace] 0

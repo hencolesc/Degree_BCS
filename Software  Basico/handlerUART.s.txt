@@ -1,0 +1,56 @@
+handler:
+	sw $a2, 20($k0)  # salva $a2 no uart_buff
+	andi  $a0, $k1, UART_rx_irq # Is this reception?
+	beq   $a0, $zero, txinterr   #   no, go to txinterr
+
+rxinterr:
+	sw $a3, 24($k0)  # salva $a3 no uart_buff
+	lui	  $a0, %hi(rx_queue)  # carrega endereço de rx_queue
+	ori   $a0, $a0, %lo(rx_queue)
+	lui   $a1, %hi(rx_tl) 	# carrega ultima posição de rx_queue
+	ori   $a1, $a1, %lo(rx_tl)
+	lw 	  $a2, 0($a1)		# le indice da ultima posição
+	nop
+    add	  $a3, $a0, $a2		# soma o endereço base da fila com o indice	do ultimo elemento
+	lui   $a0, %hi(HW_uart_addr) # carrega endereço da UART
+	ori   $a0, $a0, %lo(HW_uart_addr)
+	lw    $a0, 4($a0) 	    # le dado da UART 
+	nop	
+	sb    $a0, 0($a3)    	# grava na ultima posição de rx_queue
+	addi  $a2, $a2, 1		# calcula novo ultimo elemento
+	andi $a2, $a2, 0xf
+	sw    $a2, 0($a1) 		# grava nova ultima posição
+	lui   $a0, %hi(nrx)  	# carrega endereço de nrx
+	ori   $a0, $a0, %lo(nrx)
+	lw	  $a1, 0($a0)		# carrega nrx
+	nop
+    addi  $a1, $a1, 1    	# incrementa nrx
+	sw    $a1, 0($a0)		# grava novo nrx
+	lw 	  $a2, 20($k0)		# restaura $a2
+	lw	  $a3, 24($k0)
+	j     UARTret        	# encerra
+
+txinterr:
+	lui	  $a0, %hi(tx_queue)  # carrega endereço de tx_queue
+	ori   $a0, $a0, %lo(tx_queue)
+	lui   $a1, %hi(tx_hd)  	# carrega primeira posição
+	ori   $a1, $a1, %lo(tx_hd)
+	lw 	  $a2, 0($a1) 		# le indice da primeira posição
+	nop
+	add	  $a1, $a0, $a2     # posição que eu quero da pilha
+	lb    $a1, 0($a1)      	# le o dado da primeira posição de tx_queue
+	addi  $a2, $a2, 1       # incrementa primeira posição
+	andi  $a2, $a2, 0xf
+    
+    sw    $a2, 0($a0) 		# grava nova primeira posição 
+	nop
+	lui   $a0, %hi(HW_uart_addr) # carrega endereço da UART
+	ori   $a0, $a0, %lo(HW_uart_addr)
+	sw    $a1, 4($a0) 	    # grava dado na UART 
+	lui   $a0, %hi(ntx)		# carrega endereço de ntx
+	ori   $a0, $a0, %lo(ntx)
+	lw	  $a1, 0($a0)		# carrega ntx
+	nop
+	addi  $a1, $a1, 1		# incrementa ntx
+	sw	  $a1, 0($a0)		# grava novo ntx
+	lw 	  $a2, 20($k0)		# restaura $a2

@@ -1,0 +1,24 @@
+v 3
+file . "exerc.vhdl" "20130925004404.000" "20130924214426.201":
+  entity inv at 3( 109) + 0 on 33;
+  architecture estrutura_inv of inv at 11( 230) + 0 on 34;
+  entity and2 at 18( 367) + 0 on 35;
+  architecture estrutura_and2 of and2 at 26( 493) + 0 on 36;
+  entity and3 at 32( 634) + 0 on 37;
+  architecture estrutura_and3 of and3 at 40( 763) + 0 on 38;
+  entity or2 at 55( 1191) + 0 on 39;
+  architecture estrutura_or2 of or2 at 63( 1315) + 0 on 40;
+  entity xor2 at 69( 1452) + 0 on 41;
+  architecture estrutura_xor2 of xor2 at 77( 1578) + 0 on 42;
+  entity latchsr at 83( 1719) + 0 on 43;
+  architecture estrutura_latchsr of latchsr at 91( 1855) + 0 on 44;
+  entity latchd at 115( 2570) + 0 on 45;
+  architecture estrutura_latchd of latchd at 123( 2706) + 0 on 46;
+  entity flipflopd at 151( 3560) + 0 on 47;
+  architecture estrutura_flipflopd of flipflopd at 159( 3702) + 0 on 48;
+  entity flipflopr at 179( 4358) + 0 on 49;
+  architecture estrutura_flipflopr of flipflopr at 187( 4507) + 0 on 50;
+  entity exerc at 212( 5358) + 0 on 51;
+  architecture estrutura_exerc of exerc at 220( 5489) + 0 on 52;
+  entity teste at 263( 7024) + 0 on 53;
+  architecture arq_teste of teste at 269( 7096) + 0 on 54;
