@@ -1,0 +1,2 @@
+# Graduation_BCS
+Here is all my "academic work" during bachelor's degree in Computer Science. All this stuff is/was at UFPR, a brazilian university in the state of Paraná, in the capital Curitiba. As you can imagine, some things are in Brazilian Portuguese so if you can not understand I am sorry. Any questions about this repository can be asked to me, make a way through github or linkedin and try contact, I'll try to respond anything in a viable time.
