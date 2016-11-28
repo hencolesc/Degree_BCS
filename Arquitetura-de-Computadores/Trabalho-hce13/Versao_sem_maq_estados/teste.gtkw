@@ -1,0 +1,51 @@
+[*]
+[*] GTKWave Analyzer v3.3.49 (w)1999-2013 BSI
+[*] Wed May 21 11:58:10 2014
+[*]
+[dumpfile] "/home/bcc/econ13/Downloads/Arquitetura/mips.vcd"
+[dumpfile_mtime] "Wed May 21 11:50:45 2014"
+[dumpfile_size] 327541
+[savefile] "/home/bcc/econ13/Downloads/Arquitetura/teste.gtkw"
+[timestart] 0
+[size] 1678 1000
+[pos] -5 -49
+*-29.801361 1000000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[sst_width] 210
+[signals_width] 158
+[sst_expanded] 1
+[sst_vpaned_height] 293
+@28
+clock
+@200
+-IF
+@22
+a.if_pc[31:0]
+a.if_pc4[31:0]
+a.if_pc_next[31:0]
+@200
+-ID
+@22
+a.id_pc[31:0]
+@28
+a.id_op[5:0]
+@22
+a.id_rs[4:0]
+a.id_rt[4:0]
+a.id_rd[4:0]
+@200
+-EX
+@22
+a.ex_a[31:0]
+a.ex_alub[31:0]
+a.ex_aluout[31:0]
+a.ex_lui[31:0]
+@200
+-MEM
+-WB
+@22
+a.wb_wd[31:0]
+a.wb_regrd[4:0]
+@28
+a.stall
+[pattern_trace] 1
+[pattern_trace] 0
