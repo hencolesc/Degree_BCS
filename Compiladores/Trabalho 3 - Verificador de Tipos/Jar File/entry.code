@@ -1,0 +1,61 @@
+int a; float b; char c; int k;
+
+const d = 10 ; const e = 3.14 ; const f = 0.4565787 ; const g = 600 ;
+
+function float funcao ( ) {
+
+    int h; string j; char hu3hu3hu3; float brbr; float i; float report; char you;
+    
+    j = "%&IUTYJ&*&Ü%E$W%%Y#RWETSG"; hu3hu3hu3 = 'º';
+    
+    if ( brbr >= 0.0  && 0 <= 3 || brbr == i) then { a = 0 ; }
+    
+    funcao();
+
+    c = j ( ) ;
+
+    h++;
+
+    a = k + a ;
+
+    return report ;
+
+}
+
+function float funcao2 ( ) {
+
+    float l; char m; a = 0 ;
+
+    while ( b <= 0 && a == 0 ) do { a = 0; a = 0; a = 0 ; }
+
+    return a ;
+
+}
+
+function string funcao3 ( ) {
+
+    int n; float o; char p; a = 0 ; 
+
+    if ( a == 0 ) then { a = 0 ; } else { a = 0 ; }
+
+    return a ;
+
+}
+
+main {
+
+    int q; float r; char s; a = 0 ;
+
+    for ( a = 0 ; a > 100 ; a++ ) {
+
+        if ( a == 0 ) then { a = 0 ; } else { a = 0 ; } a = 0 ;
+
+    }
+
+    a ( ) ;
+
+    b = a ( ) ;
+
+    if ( a == 0 ) then { a = 0 ; } else { a = 0 ; }
+
+}

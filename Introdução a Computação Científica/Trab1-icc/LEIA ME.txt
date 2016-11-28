@@ -1,0 +1,64 @@
+######################## Autoria ########################
+
+Henrique Colodetti Escanferla GRR20135427
+Israel Barth Rubio GRR20132194
+
+#########################################################
+
+######################## Diretórios e arquivos ########################
+
+login1-login2/inc => contém arquivos com diretivas de compilação do programa e cabeçalhos das funções implementadas.
+
+login1-login2/src => contém arquivos fonte do programa implementado.
+
+login1-login2/inc/pdeSolver.h => arquivo contendo as definições e includes de bibliotecas necessárias para a compilação do programa.
+
+login1-login2/src/main.c => contém o main do programa que trata os erros de formatação de entrada e inicia a execução do método caso não haja erros nisso nem na abertura do arquivo solução.
+
+login1-login2/solution.txt => A saída do programa conforme pedido. Contém os tempos medios da execução do método e cálculo do resí­duo por iteração. Contém a solução da equação num formato que o gnuplot plota um gráfico 3D.
+
+#########################################################
+
+######################## O programa e sua implementação ########################
+
+O código implementou o método de Gauss Seidel com a opção Sucessive Over Relaxation para acelerar o processo de convergência da solução para a discretização.
+
+O método de Gauss Seidel consiste em chutar valores iniciais num grupo de incógnitas de um sistema linear determinado isolando cada uma das n incógnitas em cada uma das n equações. Isto gera outro grupo de chutes que sao imediatamente usados nas outras equações até que todas elas sejam iteradas desta forma. Isto se repete, da primeira equação até a última, até que os valores das incógnitas ou o valor do resíduo, seja tal que se torne aceitável o chute atual como a solução do problema.
+
+A ideia do método Sucessive Over Relaxation é a de que, se qualquer metodo iterativo numa sequência de x(1), x(2) , x(3), ... , x(k) converge, então o próximo x(i+1) a ser gerado tem uma distância do x(i) menor do que tinha o x da iteração anterior. Aplicando o método SOR no GS, vamos medir a distância entre a incógnita atual para a próxima e andar toda esta distância e mais um pouco. Este "mais um pouco" é indicado pelo fator w de relaxação. Escolhendo algum w entre 1 e 2, a convergência do GS sofre uma aceleração e isso nos dá uma solução igualmente precisa gastando menos iterações, menos tempo e menos computação de dados.
+
+O método gs, na situacao especificada, foi implementado utilizando um vetor que contém um ghost layer para as bordas de valores fixos que são previamente computadas uma única vez e contém todas as incógnitas geradas pela discretização do espaço amostral. O metódo SOR foi embutido no GS, considerando que somente o valor da constante multiplicativa "w" diferencia os dois métodos.
+
+Não foi necessário alocar e guardar uma matriz com os coeficientes do sistema linear pois eles são constantes e foram postos no formato padrão das n equações do sistema linear.
+
+Várias constantes de multiplicação, divisão, soma e subtração foram calculadas uma única vez e usadas nas contas dentro dos loops de iteração do método pois elas nao mudam e nao precisam ser calculadas mais de uma vez.
+
+Todas estas escolhas visaram o bom senso da performance do programa para que não calcule mais de uma vez o que não precisa e nao precise gastar memória para salvar o que não seria modificado na execução.
+
+Discrepâncias numéricas foram difíceis de se encontrar pois qualquer detalhe de cálculo poderia causar tal diferenciação na resposta esperada. Isto foi resolvido usando o programa excel para simular as mesmas contas que nosso programa deveria fazer e, comparando os valores do excel com o programa, conseguimos ver exatamente em que parte da conta o valor estava errado no programa e, assim, erros difíceis de se encontrar foram encontrados e resolvidos. 
+
+Fizemos um loop para contar o número de iterações pedido e, dentro deste, 2 loops que, respectivamente, executam uma iteração do método GS / SOR e o cálculo do resíduo.
+
+O resíduo do método SOR indica que o último, que deveria acelerar a ação do método GS, está retardando-o em alguns casos. Por testes com discretizações próximas de 10 por 10, concluímos que o fator de relaxação escolhido na especificação do trabalho causa um atraso na convergência.
+
+Descobrímos que, nos testes acima mencionados, valores próximos a 1.5 resultam em convergência quase idênticas ao método original (gauss Seidel) como também valores próximos a 1, afinal, multiplicar o passo do GS por 1 nada mais é do que aplicar o próprio passo sem modificações.
+
+Valores próximos a 1.26, nos testes mencionados acima, indicaram a melhor aceleração na convergência dos casos testados.
+
+Vimos também que, testando discretizações próximas de 100 por 100, a escolha de w espeficicada demonstra uma melhora na velocidade de convergência, mas usando w com valores próximos a 1.5 a melhora é ainda mais notável.
+
+Concluímos que o valor de w que demonstra a melhor convergência depende da forma discretizada do espaço amostral onde devemos determinar os valores na equação dada. Isto é facilmente observado testando diferentes valores de w para diferentes tamanhos de discretizações.
+
+#########################################################
+
+######################## Bugs conhecidos ########################
+
+O computador contém memória limitada e sua capacidade de representação numérica sofre com perda de precisão. Isso significa que sempre existirá um erro de exatidão qualquer que seja o número de iterações.
+
+#########################################################
+
+######################## Fonte para o mÃ©todo SOR derivado do mÃ©todo GS ########################
+
+http://www.maa.org/publications/periodicals/loci/joma/iterative-methods-for-solving-iaxi-ibi-the-sor-method
+
+http://mathworld.wolfram.com/SuccessiveOverrelaxationMethod.html

@@ -1,0 +1,5 @@
+gedit sinaleiro.vhdl
+ghdl -a sinaleiro.vhdl
+ghdl -e teste
+ghdl -r teste --vcd=teste.vcd
+gtkwave teste.vcd
