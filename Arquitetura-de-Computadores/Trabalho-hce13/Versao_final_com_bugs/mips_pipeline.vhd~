@@ -1,0 +1,282 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use ieee.std_logic_unsigned.all;
+use ieee.numeric_bit.all;
+use work.p_MI0.all;
+
+entity mips_pipeline is
+	port (
+		clk: in																		std_logic;
+		reset: in																	std_logic
+	);
+end mips_pipeline;
+
+
+architecture arq_mips_pipeline of mips_pipeline is
+   
+
+    -- ********************************************************************
+    --                              Signal Declarations
+    -- ********************************************************************
+     
+    -- IF Signal Declarations
+    
+    signal IF_pc_next, IF_pc4, IF_pc, IF_instr:												reg32;
+   	signal IF_acha_desvia:															std_logic; -- previsao de desvio
+   	signal IF_flush:																std_logic_vector(1 downto 0); -- Flush e seu "tipo"
+
+    -- ID Signal Declarations
+
+    signal ID_instr, ID_pc4:														reg32;  -- pipeline register values from IF
+    signal ID_op, ID_funct:															std_logic_vector(5 downto 0);
+    signal ID_rs, ID_rt, ID_rd, ID_RegRd:											std_logic_vector(4 downto 0);
+    signal ID_immed:																std_logic_vector(15 downto 0);
+    signal ID_extend, ID_A, ID_B,ID_offset, ID_btgt:								reg32;
+    signal ID_RegWrite, ID_Branch, ID_MemRead, ID_MemWrite, ID_ALUSrc:				std_logic; --ID Control Signals
+    signal ID_MemtoReg,	ID_RegDst, ID_acha_desvia:									std_logic_vector(1 downto 0);
+    signal ID_ALUOp:																std_logic_vector(2 downto 0);
+    signal ID_MemForward_ctl, ID_stall:												std_logic; -- P/ foward e bolha
+
+    -- EX Signals
+
+    signal	EX_pc4, EX_extend, EX_A, EX_B, EX_forward_B:							reg32;
+    signal	EX_offset, EX_btgt, EX_alub, EX_alua, EX_ALUOut: 						reg32;
+    signal	EX_RegRd, EX_rs, EX_rt:													std_logic_vector(4 downto 0);
+    signal	EX_funct:																std_logic_vector(5 downto 0);
+    signal	EX_RegWrite, EX_Branch, EX_MemRead, EX_MemWrite, EX_ALUSrc: 			std_logic;  -- EX Control Signals
+    signal	EX_Zero:																std_logic;
+    signal	EX_MemtoReg, EX_acha_desvia:											std_logic_vector(1 downto 0);
+    signal	EX_forward_ctl_A, EX_forward_ctl_B:					 					std_logic_vector(1 downto 0); -- Forward p/ regs.
+    signal	EX_MemForward_ctl:														std_logic; -- Forward p/ copia de memoria
+    signal	EX_Operation, EX_ALUOp:													std_logic_vector(2 downto 0);
+	signal	EX_PCSrc:																std_logic;
+
+
+   -- MEM Signals
+
+    signal MEM_RegWrite, MEM_MemRead, MEM_MemWrite, MEM_MemForward_ctl:				std_logic; -- Forward p/ copia de memoria
+    signal MEM_ALUOut, MEM_B, MEM_data_in:											reg32;
+    signal MEM_memout:																reg32;
+    signal MEM_MemtoReg:															std_logic_vector(1 downto 0);
+    signal MEM_RegRd:																std_logic_vector(4 downto 0);
+   
+
+    -- WB Signals
+
+    signal WB_RegWrite:																std_logic;  -- WB Control Signals
+    signal WB_memout, WB_ALUOut, WB_B, WB_memadd:									reg32;
+    signal WB_wd:																	reg32;
+    signal WB_MemtoReg:																std_logic_vector(1 downto 0);
+    signal WB_RegRd:																std_logic_vector(4 downto 0);
+
+
+
+begin -- BEGIN MIPS_PIPELINE ARCHITECTURE
+
+    -- ********************************************************************
+    --                              IF Stage
+    -- ********************************************************************
+
+    -- IF Hardware
+
+    PC:			entity work.reg port map (clk, reset, IF_pc_next, IF_pc);
+    
+    -- Decide, dentre varias situações, qual o prox. pc
+    PC_BACK:	entity work.pc_back port map (reset, clk, IF_pc, IF_flush, ID_btgt, ID_acha_desvia, EX_btgt, EX_pc4, IF_pc_next, IF_pc4);
+    
+    ROM_INST:	entity work.rom32 port map (IF_pc, IF_instr);
+
+    IF_s: process(clk, ID_stall)
+    begin     			-- IF/ID Pipeline Register
+    	if rising_edge(clk) then
+		    if ((reset = '1') or (ID_acha_desvia = "01") or (not(IF_flush = "00"))) then -- Caso reset, previsao desvia ou erro na previsao
+		       		ID_instr <= (others => '0');
+		       		ID_pc4   <= (others => '0');
+		    else if ID_stall = '0' then	-- Caso bolha: manter valores dos regs., se não, passa adiante normalmente
+		       			ID_instr <= IF_instr;
+		       			ID_pc4   <= IF_pc4;
+		   		end if;
+		   	end if;
+		end if;
+    end process;
+
+    -- ********************************************************************
+    --                              ID Stage
+    -- ********************************************************************
+
+    ID_op <= ID_instr(31 downto 26);
+    ID_rs <= ID_instr(25 downto 21);
+    ID_rt <= ID_instr(20 downto 16);
+    ID_rd <= ID_instr(15 downto 11);
+    ID_immed <= ID_instr(15 downto 0);
+
+
+    REG_FILE: entity work.reg_bank port map ( clk, reset, WB_RegWrite, ID_rs, ID_rt, WB_RegRd, ID_A, ID_B, WB_wd);
+
+
+    -- sign-extender
+    EXT: process(ID_immed)
+    begin
+	if ID_immed(15) = '1' then
+		ID_extend <= x"FFFF" & ID_immed(15 downto 0);
+	else
+		ID_extend <= x"0000" & ID_immed(15 downto 0);
+	end if;
+    end process;
+
+	CTRL: entity work.control_pipeline port map (ID_stall, ID_op, ID_RegDst, ID_ALUSrc, ID_MemtoReg, ID_RegWrite, ID_MemRead,
+        										 ID_MemWrite, ID_Branch, ID_ALUOp); -- Caso bolha, op. vira nop exceto por regwrite = 0
+	
+	-- Preve branchs e detecta flushs
+	PREVISAO_B: entity work.maq_estado_flush port map (clk, reset, ID_Branch, EX_Branch, EX_PCSrc, EX_acha_desvia, ID_acha_desvia, 														   IF_flush);
+	
+	-- branch offset shifter
+    SIGN_EXT:		entity work.shift_left port map (ID_extend, 2, ID_offset); -- Movido de EX p/ ID p/ podermos chutar branch no ID
+	
+	BRANCH_ADD:		entity work.add32 port map (ID_pc4, ID_offset, ID_btgt); -- IDEM
+	
+	-- Detecta hazards e faz bolhas     
+    STALL_HAZARD: entity work.stall_pipeline port map (ID_MemForward_ctl, EX_MemRead, EX_rt, ID_rt, ID_rs, ID_stall);
+
+    
+	DEST_MUX3: entity work.mux3 generic map (5) port map (ID_RegDst, ID_rt, ID_rd, "00000", ID_RegRd); -- Bolha: rd <= "00000"
+
+    ID_EX_pip: process(clk)		    -- ID/EX Pipeline Register
+    begin
+	if rising_edge(clk) then
+        	if ((reset = '1') or (not(IF_flush = "00"))) then -- Caso reset ou flush, zera EX. Flush produz 2 bolhas
+				    EX_ALUSrc			<=	'0';
+					EX_Branch			<= 	'0';
+					EX_MemRead			<= 	'0';
+					EX_MemWrite			<= 	'0';
+					EX_RegWrite			<=	'0';
+					EX_MemForward_ctl	<=	'0';
+					EX_acha_desvia		<=	"00";
+					EX_MemtoReg			<=	"00";
+
+					EX_ALUOp	<= (others => '0');
+					EX_pc4		<= (others => '0');
+					EX_A		<= (others => '0');
+					EX_B		<= (others => '0');
+					EX_extend	<= (others => '0');
+					EX_RegRd	<= (others => '0');
+					EX_rs		<= (others => '0');
+					EX_rt		<= (others => '0');
+					EX_offset	<= (others => '0');
+					EX_btgt		<= (others => '0');
+        	else 
+		        	EX_RegRd     <= ID_RegRd;
+		        	EX_ALUOp     <= ID_ALUOp;
+		        	EX_ALUSrc    <= ID_ALUSrc;
+		        	EX_Branch    <= ID_Branch;
+		        	EX_MemRead   <= ID_MemRead;
+		        	EX_MemWrite  <= ID_MemWrite;
+		        	EX_RegWrite  <= ID_RegWrite;
+		        	EX_MemtoReg  <= ID_MemtoReg;
+		      
+		       		EX_pc4				<=	ID_pc4;
+		       		EX_A				<=	ID_A;
+		       		EX_B				<=	ID_B;
+		        	EX_extend			<=	ID_extend;
+		        	EX_rs				<=	ID_rs;
+		        	EX_rt				<=	ID_rt;
+		        	EX_MemForward_ctl	<=	ID_MemForward_ctl;
+		        	EX_btgt				<=	ID_btgt;
+		        	EX_offset			<=	ID_offset;
+		        	EX_acha_desvia		<=	ID_acha_desvia;
+					EX_btgt				<=	ID_btgt;
+        	end if;
+	end if;
+    end process;
+
+    -- ********************************************************************
+    --                              EX Stage
+    -- ********************************************************************
+
+    EX_funct <= EX_extend(5 downto 0);  
+
+    ALU_MUX_B:		entity work.mux2 generic map (32) port map (EX_ALUSrc, EX_forward_B, EX_extend, EX_alub);
+    
+    MUX_FORWARD_B:	entity work.mux3 generic map (32) port map (EX_forward_ctl_B, EX_B, WB_wd, MEM_ALUOut, EX_forward_B); -- FORWARD rt
+    
+    MUX_FORWARD_A:	entity work.mux3 generic map (32) port map (EX_forward_ctl_A, EX_A, WB_wd, MEM_ALUOut, EX_alua); -- FORWARD rs
+
+    ALU_h:			entity work.alu port map (EX_Operation, EX_alua, EX_alub, EX_ALUOut, EX_Zero);
+
+    ALU_c:			entity work.alu_ctl port map (EX_ALUOp, EX_funct, EX_Operation);
+    
+    EX_PCSrc <= EX_Branch and EX_Zero; -- Originalmente no estagio MEM. Sinal p/: desvia ou não?
+        
+    				-- Forward dos regs. RS, RT e cópia de memória
+    FORWARD:		entity work.forward_pipeline port map (clk, EX_RegRd, EX_rs, EX_rt, MEM_RegWrite, WB_RegWrite, MEM_RegRd, WB_RegRd, 														   ID_MemWrite, EX_RegWrite, ID_rt, EX_forward_ctl_A, EX_forward_ctl_B, 														   ID_MemForward_ctl);
+
+    EX_MEM_pip: process (clk)		    -- EX/MEM Pipeline Register
+    begin
+	if rising_edge(clk) then
+        	if reset = '1' then
+        
+            		MEM_MemRead			<=	'0';
+            		MEM_MemWrite		<=	'0';
+            		MEM_RegWrite		<=	'0';
+            		MEM_MemForward_ctl	<=	'0';
+            		MEM_MemtoReg		<=	"00";
+
+            		MEM_ALUOut	<= (others => '0');
+            		MEM_B		<= (others => '0');
+            		MEM_RegRd	<= (others => '0');
+        	else
+            		MEM_MemRead 	<= EX_MemRead;
+            		MEM_MemWrite	<= EX_MemWrite;
+            		MEM_RegWrite	<= EX_RegWrite;
+            		MEM_MemtoReg	<= EX_MemtoReg;
+
+            		MEM_ALUOut			<=	EX_ALUOut;
+            		MEM_B				<=	EX_B;
+            		MEM_RegRd			<=	EX_RegRd;
+            		MEM_MemForward_ctl	<=	EX_MemForward_ctl;
+        	end if;
+	end if;
+    end process;
+
+    -- ********************************************************************
+    --                              MEM Stage
+    -- ********************************************************************
+
+    MEM_ACCESS:			entity work.mem32 port map (clk, MEM_MemRead, MEM_MemWrite, MEM_ALUOut, MEM_data_in, MEM_memout);
+
+	MEM_MUX_FORWARD:	entity work.mux2 generic map (32) port map (MEM_MemForward_ctl, MEM_b, WB_wd, MEM_data_in);
+
+    MEM_WB_pip: process (clk)		-- MEM/WB Pipeline Register
+    begin
+	if rising_edge(clk) then
+	        if reset = '1' then
+            		WB_RegWrite <= '0';
+            		WB_MemtoReg <= "00";
+            		WB_ALUOut   <= (others => '0');
+            		WB_memout   <= (others => '0');
+            		WB_RegRd    <= (others => '0');
+            		WB_B		<= (others => '0');
+			else
+            		WB_RegWrite <= MEM_RegWrite;
+            		WB_MemtoReg <= MEM_MemtoReg;
+            		WB_ALUOut   <= MEM_ALUOut;
+            		WB_memout   <= MEM_memout;
+            		WB_RegRd    <= MEM_RegRd;
+            		WB_B		<= MEM_B;
+			end if;
+	end if;
+    end process;       
+
+    -- ********************************************************************
+    --                              WB Stage
+    -- ********************************************************************
+
+	ADD_MEM:	entity work.add32 port map (WB_B, WB_memout, WB_memadd); -- Soma a saída da memória e a saída da ULA que contém o reg. a
+
+    MUX_DEST:	entity work.mux3 generic map (32) port map (WB_MemtoReg, WB_ALUOut, WB_memout, WB_memadd, WB_wd); -- 4ª entrada p/ ADDM
+    
+    --REG_FILE: reg_bank port map (clk, reset, WB_RegWrite, ID_rs, ID_rt, WB_RegRd, ID_A, ID_B, WB_wd); *instance is the same of that in the ID stage
+
+
+end arq_mips_pipeline;
+
