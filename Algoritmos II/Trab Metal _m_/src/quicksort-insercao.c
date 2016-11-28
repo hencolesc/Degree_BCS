@@ -1,0 +1,20 @@
+#include "insercao.h"
+#include "particiona.h"
+
+
+/* -------------------------------------------------------------------------- */
+/* ordena v[a..b] usando o algoritmo QuickSort com inserção e devolve v       */
+
+int *quicksort_insercao(int v[], int a, int b, unsigned int m)
+{
+if((b-a+1) >= m)
+{
+return insercao(v, a, b);
+}
+
+int k = particiona(v, a, b, v[b]);
+
+quicksort(v, a, k-1, m);
+quicksort(v, k+1, b, m);
+return v;
+}

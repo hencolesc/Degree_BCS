@@ -1,0 +1,11 @@
+Henrique Colodetti Escanferla e Lucas Ferreira Glir - README do programa "tree"
+
+Segue abaixo alguns detalhes sobre a execução do programa nomeado "tree":
+	1)	No comando de impressão em red-black somente é necessário escrever "pr" inves de "prb" ou "p rb".
+	2)	No comando de impressão em 2-3-4 somente é necessário escrever "p(x)" com (x) diferente de 'r' inves de "p234" 			ou "p 234".
+	3)	No comando de busca somente é necessário escrever "b(chave)" invés de "b (chave)". Nos itens 2,3 e 4 isto foi 			usado como alternativa para não tratar erros na leitura de comandos.
+	4)	Buscar o valor 0 retorna 1 pois a árvore contém o nodo sentinela que possui chave = 1.
+	5)	Inserir valores que ja existem na árvore são inseridos na sub-arvore direita do nó que contém esta mesma chave, antes de arrumar a árvore caso necessário. O sucessor do nó com tal chave repetida será o outro nó de mesma chave.
+		O comportamento é o mesmo de inserir uma chave x tal que chave < x < chave + 1.
+	6)	Pedir para remover uma chave que exista em mais de um nó na árvore, de acordo com o item 5, causa a substituição 			do nó em questão pelo nó de mesma chave pois é seu sucessor. Deste modo, pedir para remover um nó com tal 			característica causa a substituição do nó de tal chave de menor altura pelo nó com a mesma chave com a menor 			altura que seja maior que aquela.
+		Por exemplo, se existir 3 nós com mesma chave numa árvore, elas estarão em 3 alturas diferentes. Pedir para 		remover tal chave ocasionará a remoção do nó com maior altura entre os 3, sendo substituído pelo nó que possui 			altura intermedirária pois ele será o sucessor do nó com menor altura.

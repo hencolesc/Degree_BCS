@@ -1,0 +1,24 @@
+#include <stdio.h> // Versão recursiva do algoritmo que verifica parenteses numa string. Autor: Henrique Colodetti Escanferla.
+
+int main()
+{
+int cont=0, i=0;
+char s[30];
+
+scanf("%s", s); // Le string do teclado
+while(cont>=0 && s[i]!='\0')
+    {
+    switch (s[i])
+        {
+        case '\0': break 2;
+        case '(': cont++; break;
+        case ')': cont--; break;
+        }
+    i++;
+    }
+if (cont)
+    printf("Quantidade de parenteses invalida.\n");
+else
+    printf("Quantidade de parenteses valida.\n");
+return 0; // FIM DO PROGRAMA
+}

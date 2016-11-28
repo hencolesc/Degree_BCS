@@ -1,0 +1,28 @@
+program AlgLista1Ex6; (* Exercício 6 da Lista 1 de ALgoritmos. *)
+
+var a, b, c, d, e, f, m, mx, my, x, y: real; (* Variáveis reais para as equações aceitarem qualquer tipo de valor. *)
+
+begin (* Começo do processo. *)
+
+writeln('Dados a, b, c, d, e, f fornecidos pertencentes ao conjunto dos reais, este algoritmo fornecerá os valores de x e y que se enquadrem na seguinte situação: (i) ax + by = c (ii) dx + ey = f. Atenção, forneça um sistema possível, pois, caso contrário, o algoritmo sofrerá um erro de cálculo indicando que o sistema fornecido não é determinado com valores únicos para x e y.'); (* Apresentação do algoritmo, sua função, as variáveis envolvidas e informações sobre a solução ou não do sistema fornecido. *)
+write('Digite o valor de a: '); (* Pedido de "a" ao usuário. *)
+readln(a); (* Leitura de "a". *)
+write('Digite o valor de b: '); (* Pedido de "b" ao usuário. *)
+readln(b); (* Leitura de "b". *)
+write('Digite o valor de c: '); (* Pedido de "c" ao usuário. *)
+readln(c); (* Leitura de "c". *)
+write('Digite o valor de d: '); (* Pedido de "d" ao usuário. *)
+readln(d); (* Leitura de "d". *)
+write('Digite o valor de e: '); (* Pedido de "e" ao usuário. *)
+readln(e); (* Leitura de "e". *)
+write('Digite o valor de f: '); (* Pedido de "f" ao usuário. *)
+readln(f); (* Leitura de "f". *)
+m:=a*e-b*d; (* Determinante m. *)
+mx:=c*e-b*f; (* Determinante mx. *)
+my:=a*f-c*d; (* Determinante my. *)
+x:=mx/m; (* x = mx/m pelo método de Cramer. *)
+y:=my/m; (* y = my/m pelo método de Cramer. *)
+writeln('O valor de x no sistema formado é: ',x:6:3); (* Apresentação do resultado para o usuário. *)
+writeln('O valor de y no sistema formado é: ',y:6:3); (* Apresentação do resultado para o usuário. *)
+
+end. (* Fim do processo. *)
