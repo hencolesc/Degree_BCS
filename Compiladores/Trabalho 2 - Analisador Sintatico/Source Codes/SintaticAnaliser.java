@@ -1,5 +1,5 @@
 /*
- * Créditos a destacar:
+ * Fonte de informações sobre expressões regulares utilizada:
  * http://www.regexplanet.com/advanced/java/index.html
  * http://www.regular-expressions.info/
  */
