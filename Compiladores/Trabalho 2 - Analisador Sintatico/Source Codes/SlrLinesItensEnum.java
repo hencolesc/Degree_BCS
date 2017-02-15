@@ -1,8 +1,3 @@
-/*
- * To change this license headeR, choose License HeadeRs in PRoject PRopeRties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editoR.
- */
 package sintaticanaliser;
 
 import static sintaticanaliser.SlrColumnsEnum.*;
